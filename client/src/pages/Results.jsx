@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 
 import {
   Link,
-  useParams
+  useParams,
 } from "react-router-dom";
 
 import Header from "../components/Header";
@@ -12,113 +12,180 @@ import FeedbackForm from "../components/FeedbackForm";
 import { getInterview } from "../services/api";
 
 function Results() {
-
   const { interviewId } = useParams();
 
-  const [interview, setInterview] =
-    useState(null);
-
-  const [loading, setLoading] =
-    useState(true);
+  const [interview, setInterview] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-
     const loadResults = async () => {
-
       try {
+        setLoading(true);
+        setError("");
 
-        const data =
-          await getInterview(interviewId);
+        console.log(
+          "Loading results for interview:",
+          interviewId
+        );
+
+        if (!interviewId) {
+          throw new Error(
+            "Interview ID is missing."
+          );
+        }
+
+        const data = await getInterview(
+          interviewId
+        );
+
+        console.log(
+          "Flask results response:",
+          data
+        );
+
+        if (
+          !data ||
+          !data.success ||
+          !data.interview
+        ) {
+          throw new Error(
+            data?.message ||
+              "Interview results not found."
+          );
+        }
 
         setInterview(data.interview);
 
       } catch (error) {
+        console.error(
+          "Could not load results:",
+          error
+        );
 
-        console.error(error);
-
+        setError(
+          error?.response?.data?.message ||
+            error?.message ||
+            "Could not load interview results."
+        );
       } finally {
-
         setLoading(false);
-
       }
-
     };
 
     loadResults();
-
   }, [interviewId]);
 
+  // -----------------------------------------
+  // LOADING
+  // -----------------------------------------
 
   if (loading) {
-
     return (
       <div className="loading">
-        Preparing your results...
+        <h2>
+          Preparing your results...
+        </h2>
       </div>
     );
-
   }
 
+  // -----------------------------------------
+  // ERROR
+  // -----------------------------------------
 
-  if (!interview) {
-
+  if (error || !interview) {
     return (
-      <div className="error-page">
-        Results not found.
-      </div>
-    );
+      <>
+        <Header />
 
+        <div className="error-page">
+          <div>
+            <h2>
+              Results not found
+            </h2>
+
+            <p
+              style={{
+                marginTop: "10px",
+                color: "#667085",
+              }}
+            >
+              {error ||
+                "We could not find this interview."}
+            </p>
+
+            <button
+              className="primary-button"
+              style={{
+                marginTop: "20px",
+              }}
+              onClick={() =>
+                window.location.href =
+                  "/setup"
+              }
+            >
+              Start New Interview
+            </button>
+          </div>
+        </div>
+      </>
+    );
   }
 
+  // -----------------------------------------
+  // ANSWERS
+  // -----------------------------------------
 
   const answers = interview.answers || [];
 
-  const average = answers.length
-    ? Math.round(
-        answers.reduce(
-          (sum, item) =>
-            sum + item.score,
-          0
-        ) / answers.length
-      )
-    : 0;
+  // -----------------------------------------
+  // CALCULATE SCORES
+  // -----------------------------------------
 
-  const communication = answers.length
-    ? Math.round(
-        answers.reduce(
-          (sum, item) =>
-            sum + item.communication,
-          0
-        ) / answers.length
-      )
-    : 0;
+  const calculateAverage = (field) => {
+    if (!answers.length) {
+      return 0;
+    }
 
-  const technical = answers.length
-    ? Math.round(
-        answers.reduce(
-          (sum, item) =>
-            sum + item.technical,
-          0
-        ) / answers.length
-      )
-    : 0;
+    const total = answers.reduce(
+      (sum, item) => {
+        return (
+          sum +
+          Number(item[field] || 0)
+        );
+      },
+      0
+    );
 
-  const relevance = answers.length
-    ? Math.round(
-        answers.reduce(
-          (sum, item) =>
-            sum + item.relevance,
-          0
-        ) / answers.length
-      )
-    : 0;
+    return Math.round(
+      total / answers.length
+    );
+  };
 
+  const average =
+    calculateAverage("score");
+
+  const communication =
+    calculateAverage("communication");
+
+  const technical =
+    calculateAverage("technical");
+
+  const relevance =
+    calculateAverage("relevance");
+
+  // -----------------------------------------
+  // PAGE
+  // -----------------------------------------
 
   return (
     <>
       <Header />
 
       <main className="results-page">
+
+        {/* HEADING */}
 
         <div className="results-heading">
 
@@ -131,13 +198,15 @@ function Results() {
           </h1>
 
           <p>
-            Your AI interviewer analyzed your
-            responses across communication,
-            technical quality, and relevance.
+            Your AI interviewer analyzed
+            your responses across
+            communication, technical
+            quality, and relevance.
           </p>
 
         </div>
 
+        {/* OVERALL SCORE */}
 
         <div className="overall-score">
 
@@ -164,6 +233,7 @@ function Results() {
 
         </div>
 
+        {/* SCORE CARDS */}
 
         <div className="score-grid">
 
@@ -193,6 +263,7 @@ function Results() {
 
         </div>
 
+        {/* FEEDBACK */}
 
         <div className="results-section">
 
@@ -200,26 +271,49 @@ function Results() {
             AI Interviewer Feedback
           </h2>
 
-          <ul>
+          {answers.length === 0 ? (
 
-            {answers.map((item, index) => (
+            <p
+              style={{
+                color: "#667085",
+              }}
+            >
+              No answers were recorded
+              for this interview.
+            </p>
 
-              <li key={index}>
-                <strong>
-                  Q{index + 1}:
-                </strong>{" "}
-                {item.feedback}
-              </li>
+          ) : (
 
-            ))}
+            <ul>
 
-          </ul>
+              {answers.map(
+                (item, index) => (
+
+                  <li key={index}>
+
+                    <strong>
+                      Q{index + 1}:
+                    </strong>{" "}
+
+                    {item.feedback ||
+                      "No feedback available."}
+
+                  </li>
+
+                )
+              )}
+
+            </ul>
+
+          )}
 
         </div>
 
+        {/* FEEDBACK FORM */}
 
         <FeedbackForm />
 
+        {/* ACTIONS */}
 
         <div className="results-actions">
 

@@ -14,36 +14,39 @@ import Dashboard from "./pages/Dashboard";
 function App() {
   return (
     <BrowserRouter>
-
       <Routes>
 
+        {/* Home */}
         <Route
           path="/"
           element={<Home />}
         />
 
+        {/* Interview setup */}
         <Route
           path="/setup"
           element={<Setup />}
         />
 
+        {/* Active interview */}
         <Route
           path="/interview/:id"
           element={<Interview />}
         />
 
+        {/* Interview results */}
         <Route
-          path="/results/:id"
+          path="/results/:interviewId"
           element={<Results />}
         />
 
+        {/* Dashboard */}
         <Route
           path="/dashboard"
           element={<Dashboard />}
         />
 
       </Routes>
-
     </BrowserRouter>
   );
 }
