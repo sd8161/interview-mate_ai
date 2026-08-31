@@ -1,64 +1,125 @@
 import axios from "axios";
 
-const API_URL = "http://127.0.0.1:5000/api";
+// Deployed Flask backend
+const API_URL = "https://interview-mate-ai.onrender.com/api";
 
-// Create a new interview
+// --------------------------------------------------
+// Create Interview
+// --------------------------------------------------
+
 export const createInterview = async (role, difficulty) => {
-  const response = await axios.post(`${API_URL}/interviews`, {
-    role,
-    difficulty,
-  });
+  try {
+    const response = await axios.post(
+      `${API_URL}/interviews`,
+      {
+        role,
+        difficulty,
+      }
+    );
 
-  return response.data;
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Create interview error:",
+      error.response?.data || error.message
+    );
+
+    throw error;
+  }
 };
 
-// Get interview
+// --------------------------------------------------
+// Get Interview
+// --------------------------------------------------
+
 export const getInterview = async (interviewId) => {
-  const response = await axios.get(
-    `${API_URL}/interviews/${interviewId}`
-  );
+  try {
+    const response = await axios.get(
+      `${API_URL}/interviews/${interviewId}`
+    );
 
-  return response.data;
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Get interview error:",
+      error.response?.data || error.message
+    );
+
+    throw error;
+  }
 };
 
-// Submit answer
+// --------------------------------------------------
+// Submit Answer
+// --------------------------------------------------
+
 export const submitAnswer = async (
   interviewId,
   questionIndex,
   answer
 ) => {
-  const response = await axios.post(
-    `${API_URL}/interviews/${interviewId}/answer`,
-    {
-      question_index: questionIndex,
-      answer: answer,
-    }
-  );
+  try {
+    const response = await axios.post(
+      `${API_URL}/interviews/${interviewId}/answer`,
+      {
+        question_index: questionIndex,
+        answer: answer,
+      }
+    );
 
-  return response.data;
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Submit answer error:",
+      error.response?.data || error.message
+    );
+
+    throw error;
+  }
 };
 
-// Submit feedback
-export const submitFeedback = async (
-  rating,
-  comment
-) => {
-  const response = await axios.post(
-    `${API_URL}/feedback`,
-    {
-      rating,
-      comment,
-    }
-  );
+// --------------------------------------------------
+// Submit Feedback
+// --------------------------------------------------
 
-  return response.data;
+export const submitFeedback = async (rating, comment) => {
+  try {
+    const response = await axios.post(
+      `${API_URL}/feedback`,
+      {
+        rating,
+        comment,
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Submit feedback error:",
+      error.response?.data || error.message
+    );
+
+    throw error;
+  }
 };
 
-// Get analytics
+// --------------------------------------------------
+// Get Analytics
+// --------------------------------------------------
+
 export const getAnalytics = async () => {
-  const response = await axios.get(
-    `${API_URL}/analytics`
-  );
+  try {
+    const response = await axios.get(
+      `${API_URL}/analytics`
+    );
 
-  return response.data;
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Analytics error:",
+      error.response?.data || error.message
+    );
+
+    throw error;
+  }
 };
